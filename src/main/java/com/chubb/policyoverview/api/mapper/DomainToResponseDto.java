@@ -1,32 +1,48 @@
 package com.chubb.policyoverview.api.mapper;
 
-import com.chubb.policyoverview.api.dto.response.PolicyResponse;
+import com.chubb.policyoverview.api.dto.response.PolicyDetailResponseDto;
+import com.chubb.policyoverview.api.dto.response.PolicyResponseDto;
 import com.chubb.policyoverview.domain.models.Policy;
-import java.util.List;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DomainToResponseDto {
 
-    public PolicyResponse toResponse(Policy policy) {
-        return new PolicyResponse(
-                policy.id(),
-                policy.policyNumber(),
-                policy.policyholderName(),
-                policy.lineOfBusiness().getDisplayName(),
-                policy.status().getDisplayName(),
-                policy.premiumAmount(),
-                policy.currency(),
-                policy.effectiveDate(),
-                policy.expiryDate(),
-                policy.region().getDisplayName(),
-                policy.underwriter(),
-                policy.flaggedForReview(),
-                policy.createdAt(),
-                policy.updatedAt());
+    public PolicyResponseDto toResponse(Policy policy) {
+        return PolicyResponseDto.builder()
+                .id(policy.id())
+                .policyNumber(policy.policyNumber())
+                .policyholderName(policy.policyholderName())
+                .lineOfBusiness(policy.lineOfBusiness().getDisplayName())
+                .status(policy.status().getDisplayName())
+                .premiumAmount(policy.premiumAmount())
+                .currency(policy.currency())
+                .effectiveDate(policy.effectiveDate())
+                .expiryDate(policy.expiryDate())
+                .region(policy.region().getDisplayName())
+                .underwriter(policy.underwriter())
+                .flaggedForReview(policy.flaggedForReview())
+                .createdAt(policy.createdAt())
+                .updatedAt(policy.updatedAt())
+                .build();
     }
 
-    public List<PolicyResponse> toResponseList(List<Policy> policies) {
-        return policies.stream().map(this::toResponse).toList();
+    public PolicyDetailResponseDto toDetailResponse(Policy policy) {
+        return PolicyDetailResponseDto.builder()
+                .id(policy.id())
+                .policyNumber(policy.policyNumber())
+                .policyholderName(policy.policyholderName())
+                .lineOfBusiness(policy.lineOfBusiness().getDisplayName())
+                .status(policy.status().getDisplayName())
+                .premiumAmount(policy.premiumAmount())
+                .currency(policy.currency())
+                .effectiveDate(policy.effectiveDate())
+                .expiryDate(policy.expiryDate())
+                .region(policy.region().getDisplayName())
+                .underwriter(policy.underwriter())
+                .flaggedForReview(policy.flaggedForReview())
+                .createdAt(policy.createdAt())
+                .updatedAt(policy.updatedAt())
+                .build();
     }
 }
