@@ -1,6 +1,15 @@
 # Docker Compose for the Policy Overview BFF local environment.
 # Compose V2 (Docker Desktop) — the top-level `version:` key is obsolete and intentionally omitted.
 #
+# Database configuration is externalized via environment variables with sensible local
+# defaults (the `${VAR:-default}` syntax). Local development works with no setup; override
+# any value by exporting it in your shell or placing it in a `.env` file next to this file:
+#
+#   DB_NAME=policydb
+#   DB_USERNAME=postgres
+#   DB_PASSWORD=postgres
+#   DB_PORT=5432
+#
 # Usage:
 #   docker compose up -d      # start PostgreSQL in the background
 #   docker compose down       # stop and remove the container (data is kept in the named volume)
@@ -15,17 +24,17 @@ services:
     image: postgres:18
     container_name: policydb
 
-    # Database bootstrap credentials. These match the application's defaults
-    # (DB_URL / DB_USERNAME / DB_PASSWORD) so the BFF connects out of the box.
+    # Bootstrap credentials, injected from environment variables. The defaults match
+    # the application's datasource defaults (DB_URL / DB_USERNAME / DB_PASSWORD), so the
+    # BFF connects out of the box for local development.
     environment:
-      POSTGRES_DB: policydb
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_NAME:-policydb}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
 
-    # Expose the database on the host so the BFF (and tools like psql) can connect
-    # at localhost:5432. Format is "HOST:CONTAINER".
+    # Expose the database on the host (HOST:CONTAINER). Host port is overridable via DB_PORT.
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
 
     # Persist data across container restarts/recreations using a named volume,
     # so dropping/recreating the container does not wipe the database.
@@ -36,7 +45,7 @@ services:
     # container process started). `start_period` gives the DB time to initialise
     # before failures count against the retry budget.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d policydb"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-policydb}"]
       interval: 10s
       timeout: 5s
       retries: 5
