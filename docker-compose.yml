@@ -1,0 +1,50 @@
+# Docker Compose for the Policy Overview BFF local environment.
+# Compose V2 (Docker Desktop) — the top-level `version:` key is obsolete and intentionally omitted.
+#
+# Usage:
+#   docker compose up -d      # start PostgreSQL in the background
+#   docker compose down       # stop and remove the container (data is kept in the named volume)
+#   docker compose down -v    # stop and also delete the persisted data volume
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — primary datastore. Flyway (run by the Spring Boot app on
+  # startup) creates and migrates the schema inside this database.
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:18
+    container_name: policydb
+
+    # Database bootstrap credentials. These match the application's defaults
+    # (DB_URL / DB_USERNAME / DB_PASSWORD) so the BFF connects out of the box.
+    environment:
+      POSTGRES_DB: policydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    # Expose the database on the host so the BFF (and tools like psql) can connect
+    # at localhost:5432. Format is "HOST:CONTAINER".
+    ports:
+      - "5432:5432"
+
+    # Persist data across container restarts/recreations using a named volume,
+    # so dropping/recreating the container does not wipe the database.
+    volumes:
+      - policydb-data:/var/lib/postgresql/data
+
+    # Verify the server is actually ready to accept connections (not just that the
+    # container process started). `start_period` gives the DB time to initialise
+    # before failures count against the retry budget.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d policydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    # Restart automatically unless explicitly stopped (survives Docker/host reboots).
+    restart: unless-stopped
+
+# Named volume managed by Docker; data lives here independent of the container lifecycle.
+volumes:
+  policydb-data:
